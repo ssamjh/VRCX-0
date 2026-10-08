@@ -15,6 +15,7 @@ pub mod feed;
 pub mod files;
 pub mod friends;
 pub mod game_log;
+pub mod history_sync;
 pub mod legacy_migration;
 pub mod legacy_vrcx;
 pub mod local_moderation;

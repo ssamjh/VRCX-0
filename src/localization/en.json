@@ -2435,6 +2435,22 @@
                 }
             },
             "integrations": {
+                "history_collector": {
+                    "header": "Headless history collector",
+                    "description": "Sync friend activity recorded by a self-hosted VRCX-0 collector into this desktop history. Sync resumes from its saved checkpoint and can run automatically after sign-in.",
+                    "enable": "Enable automatic sync",
+                    "enable_description": "Sync history after sign-in and retry every five minutes while you are signed in.",
+                    "server_url": "Collector URL",
+                    "server_url_description": "The base URL of your collector, for example https://collector.example.com.",
+                    "token": "Access token",
+                    "token_description": "The token configured for your collector. It is stored in this app's local configuration.",
+                    "sync": "History sync",
+                    "sync_description": "Save the connection details, then run a sync now. Automatic sync follows the switch above.",
+                    "sync_now": "Sync now",
+                    "saved": "Collector settings saved",
+                    "sync_complete": "History sync complete · {imported} events imported",
+                    "last_sync": "Last sync: {imported} events across {pages} pages"
+                },
                 "mcp_server": {
                     "header": "MCP Server",
                     "description": "Let trusted MCP clients access your VRCX-0 data. Localhost only by default.",

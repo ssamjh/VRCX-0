@@ -32,6 +32,8 @@ pub struct FriendProjection {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_time_snapshot: Option<Vec<FriendLocationTime>>,
     pub friend_log_changed: bool,
+    #[serde(default)]
+    pub history_changed: bool,
 }
 
 impl FriendProjection {
@@ -43,6 +45,7 @@ impl FriendProjection {
             removals: Vec::new(),
             location_time_snapshot: None,
             friend_log_changed: false,
+            history_changed: false,
         }
     }
 }

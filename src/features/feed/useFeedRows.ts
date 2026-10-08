@@ -503,6 +503,7 @@ export function useFeedRows({
         favoriteUserIds,
         favoritesOnly,
         feedPersistenceDisabled,
+        friendLogRevision,
         hiddenUserIds,
         isFavoritesLoaded,
         latestReloadToken,

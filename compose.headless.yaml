@@ -1,0 +1,22 @@
+name: vrcx-0
+
+services:
+    collector:
+        image: vrcx-0-headless:local
+        build:
+            context: '${VRCX_COLLECTOR_SOURCE:?Set VRCX_COLLECTOR_SOURCE to this repository Git URL and ref}'
+            dockerfile: Dockerfile.headless
+        environment:
+            VRCX_COLLECTOR_BIND: 0.0.0.0:9001
+            # Replace this value with a long, random token before first start.
+            VRCX_COLLECTOR_TOKEN: replace-with-a-long-random-token
+        ports:
+            - '${VRCX_COLLECTOR_HOST:-127.0.0.1}:9001:9001'
+        volumes:
+            - collector-data:/data
+        restart: unless-stopped
+        init: true
+        stop_grace_period: 30s
+
+volumes:
+    collector-data:

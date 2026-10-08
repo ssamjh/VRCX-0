@@ -28,9 +28,9 @@ impl RealtimeHostRuntime {
                     chrono::Utc::now().timestamp_millis() + AVATAR_WEAR_CHECKPOINT_INTERVAL_MS,
                 )
                 .await;
-                if !runtime
+                if runtime
                     .active_current_user_context()
-                    .is_some_and(|active| active.generation == generation)
+                    .is_none_or(|active| active.generation != generation)
                 {
                     return;
                 }
@@ -70,9 +70,9 @@ impl RealtimeHostRuntime {
     ) {
         let runtime = Arc::clone(self);
         self.deps.tasks.spawn(async move {
-            if !runtime
+            if runtime
                 .active_current_user_context()
-                .is_some_and(|active| active.generation == generation)
+                .is_none_or(|active| active.generation != generation)
             {
                 return;
             }

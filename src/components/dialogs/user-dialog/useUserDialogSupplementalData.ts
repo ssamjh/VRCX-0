@@ -21,6 +21,7 @@ import {
     type UserDialogPreviousInstance,
     type UserDialogStats
 } from '@/services/userDialogSessionCacheService';
+import { useFriendLogStore } from '@/state/friendLogStore';
 
 import {
     mergePreviousDisplayNames,
@@ -77,6 +78,7 @@ export function useUserDialogSupplementalData({
     reloadToken,
     targetKey
 }: UseUserDialogSupplementalDataInput) {
+    const friendLogRevision = useFriendLogStore((state) => state.revision);
     const targetIsActive = useEffectEvent(
         (userId: string, endpoint: string) =>
             activeUserTargetRef.current.userId === userId &&
@@ -467,6 +469,7 @@ export function useUserDialogSupplementalData({
         currentUserSnapshot?.userId,
         currentUserSnapshot?.user_id,
         isTargetCurrentUser,
+        friendLogRevision,
         profile?.id,
         reloadToken,
         setUserStatsForTarget,

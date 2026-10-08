@@ -8,6 +8,7 @@ import { useSettingsPageSection } from '../../SettingsPageStateContext';
 import { SettingsCard } from '../SettingsCard';
 import { Field } from '../SettingsField';
 import { SettingsTabContent } from '../SettingsViewParts';
+import { HistoryCollectorSyncGroup } from './HistoryCollectorSyncGroup';
 import { IntegrationApiSettingsGroup } from './IntegrationApiSettingsGroup';
 
 export function SettingsIntegrationsTab() {
@@ -269,6 +270,7 @@ export function SettingsIntegrationsTab() {
                 </Field>
             </SettingsCard>
 
+            <HistoryCollectorSyncGroup />
             <IntegrationApiSettingsGroup />
         </SettingsTabContent>
     );

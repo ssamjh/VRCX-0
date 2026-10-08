@@ -1,3 +1,4 @@
+use crate::commands::local::history_sync::HistorySyncStatus;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use tauri_specta::{collect_commands, Builder, ErrorHandlingMode};
 use vrcx_0_application::auth::AuthenticatedRuntimePhaseSnapshot;
@@ -111,6 +112,7 @@ pub fn builder() -> Builder<tauri::Wry> {
         .typ::<HostSessionProjection>()
         .typ::<McpServerStatus>()
         .typ::<IntegrationApiStatus>()
+        .typ::<HistorySyncStatus>()
         .typ::<ParsedLocation>()
         .typ::<PrintAutoCleanupEvent>()
         .typ::<ProfileRestoreProgress>()
@@ -352,6 +354,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::local::friends::app__friend_log_current_list,
             commands::local::friends::app__friend_log_history_query,
             commands::local::friends::app__friend_log_history_delete,
+            commands::local::history_sync::app__history_sync_now,
             commands::local::notifications::app__notification_list_query,
             commands::local::notifications::app__notification_add_v1,
             commands::local::notifications::app__notification_v2_expire,

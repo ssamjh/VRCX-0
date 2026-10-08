@@ -140,7 +140,7 @@ describe('Friend History browsing and search', () => {
         );
     });
 
-    it('keeps old history and search results stable when a new revision arrives', async () => {
+    it('keeps the older browsing window stable and refreshes search when history changes', async () => {
         const { result, rerender } = renderHook(useFriendLogRows, {
             initialProps: initial
         });
@@ -158,9 +158,14 @@ describe('Friend History browsing and search', () => {
         const count = vi.mocked(friendLogHistoryRepository.getFriendLogHistory)
             .mock.calls.length;
         act(() => useFriendLogStore.getState().bumpRevision());
-        expect(
-            friendLogHistoryRepository.getFriendLogHistory
-        ).toHaveBeenCalledTimes(count);
+        await waitFor(() =>
+            expect(
+                friendLogHistoryRepository.getFriendLogHistory
+            ).toHaveBeenCalledTimes(count + 1)
+        );
+        await waitFor(() => expect(result.current.loadStatus).toBe('ready'));
+        expect(result.current.searchMode).toBe(true);
+        expect(result.current.orderedRows).toHaveLength(data.length);
     });
 
     it('preserves a trimmed window during manual refresh', async () => {

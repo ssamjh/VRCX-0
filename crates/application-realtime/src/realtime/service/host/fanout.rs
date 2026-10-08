@@ -43,6 +43,18 @@ impl RealtimeHostRuntime {
         });
     }
 
+    pub fn emit_history_changed(&self) {
+        let (generation, baseline_revision) = self
+            .friends
+            .snapshot()
+            .map(|snapshot| (snapshot.generation, snapshot.baseline_revision))
+            .unwrap_or((0, 0));
+        self.emit_friend_projection(FriendProjection {
+            history_changed: true,
+            ..FriendProjection::new(generation, baseline_revision)
+        });
+    }
+
     pub fn emit_friend_location_time_snapshot(self: &Arc<Self>) {
         let _owner = self.lock_friend_owner();
         let Some(snapshot) = self.friends.snapshot() else {
@@ -154,7 +166,10 @@ impl RealtimeHostRuntime {
             .store
             .write_realtime_batch(&output.owner_user_id, &output.persistence)
         {
-            Ok(_) => {
+            Ok(counts) => {
+                if counts.history_reconciled_count > 0 {
+                    self.emit_history_changed();
+                }
                 self.deps.sync.record(
                     "realtimeFriends",
                     RuntimeOperationStatus::Persisted,

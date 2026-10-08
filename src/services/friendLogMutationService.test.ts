@@ -49,4 +49,11 @@ describe('signalFriendLogChanged', () => {
         expect(mocks.bumpRevision).toHaveBeenCalledOnce();
         expect(mocks.notifyMenu).not.toHaveBeenCalled();
     });
+
+    it('refreshes imported history silently even when notifications are enabled', () => {
+        signalFriendLogChanged({ notify: false });
+
+        expect(mocks.bumpRevision).toHaveBeenCalledOnce();
+        expect(mocks.notifyMenu).not.toHaveBeenCalled();
+    });
 });

@@ -511,6 +511,7 @@ impl RealtimeStore for TestRealtimeStore {
         Ok(RealtimeWriteCounts {
             affected_count: affected,
             game_log_affected_count: 0,
+            history_reconciled_count: 0,
         })
     }
 

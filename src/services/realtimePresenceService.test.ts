@@ -247,6 +247,31 @@ describe('realtimePresenceService projection boundary', () => {
         expect(useFriendLogStore.getState().revision).toBe(before + 1);
     });
 
+    it('refreshes reconciled history without notifying or adding live feed entries', async () => {
+        const { useFriendLogStore } = await import('@/state/friendLogStore');
+        const { useShellStore } = await import('@/state/shellStore');
+        const { useFeedLiveStore } = await import('@/state/feedLiveStore');
+        const { usePreferencesStore } =
+            await import('@/state/preferencesStore');
+        const { handleRealtimeFriendProjection } =
+            await import('./realtimePresenceService');
+        usePreferencesStore.setState({ friendLogNotificationDot: true });
+
+        const before = useFriendLogStore.getState().revision;
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: [],
+            friendLogChanged: false,
+            historyChanged: true
+        });
+
+        expect(useFriendLogStore.getState().revision).toBe(before + 1);
+        expect(useShellStore.getState().notifiedMenus).toEqual([]);
+        expect(useFeedLiveStore.getState().entries).toEqual([]);
+    });
+
     it('applies runtime friend removals only to the roster', async () => {
         const { useFriendRosterStore } =
             await import('@/state/friendRosterStore');

@@ -1,0 +1,66 @@
+name: Headless Collector
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [master]
+        paths:
+            - '.github/workflows/headless-collector.yml'
+            - 'Dockerfile.headless'
+            - '.dockerignore'
+            - 'compose.headless.yaml'
+            - 'HEADLESS.md'
+            - 'Cargo.toml'
+            - 'Cargo.lock'
+            - 'crates/**'
+            - 'src-tauri/**'
+            - 'src/localization/**'
+    pull_request:
+        paths:
+            - '.github/workflows/headless-collector.yml'
+            - 'Dockerfile.headless'
+            - '.dockerignore'
+            - 'compose.headless.yaml'
+            - 'HEADLESS.md'
+            - 'Cargo.toml'
+            - 'Cargo.lock'
+            - 'crates/**'
+            - 'src-tauri/**'
+            - 'src/localization/**'
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    collector:
+        name: Test and build Linux collector
+        runs-on: ubuntu-24.04
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: Validate Compose configuration
+              env:
+                  VRCX_COLLECTOR_SOURCE: .
+              run: docker compose -f compose.headless.yaml config --quiet
+
+            - name: Test collector and persistence
+              run: docker build --target test -f Dockerfile.headless .
+
+            - name: Build runtime image
+              run: docker build --label org.opencontainers.image.revision=${{ github.sha }} -t vrcx-0-headless:local -f Dockerfile.headless .
+
+            - name: Smoke test without credentials or network
+              shell: bash
+              run: |
+                  set +e
+                  output=$(docker run --rm --network none vrcx-0-headless:local 2>&1)
+                  status=$?
+                  set -e
+                  printf '%s\n' "$output"
+                  test "$status" -eq 1
+                  printf '%s\n' "$output" | grep -F 'No saved account'

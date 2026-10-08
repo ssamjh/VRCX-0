@@ -1,0 +1,35 @@
+FROM rust:1.95-bookworm AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake clang libclang-dev pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY src-tauri ./src-tauri
+COPY src/localization ./src/localization
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,target=/usr/local/cargo/git,sharing=locked \
+    --mount=type=cache,target=/build/target,sharing=locked \
+    cargo build --locked --release -p vrcx-0-headless \
+    && cp /build/target/release/vrcx-0-headless /usr/local/bin/vrcx-0-headless
+
+FROM builder AS test
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,target=/usr/local/cargo/git,sharing=locked \
+    --mount=type=cache,target=/build/target,sharing=locked \
+    rustup component add clippy \
+    && cargo test --locked -p vrcx-0-headless -p vrcx-0-persistence \
+    && cargo clippy --locked -p vrcx-0-headless -p vrcx-0-persistence --all-targets --no-deps -- -D warnings
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 collector \
+    && mkdir /data && chown collector:collector /data
+COPY --from=builder /usr/local/bin/vrcx-0-headless /usr/local/bin/vrcx-0-headless
+USER collector
+VOLUME /data
+EXPOSE 9001
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["vrcx-0-headless", "--data-dir", "/data"]

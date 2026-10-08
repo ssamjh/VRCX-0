@@ -10,8 +10,10 @@ name = "vrcx-0-headless"
 path = "src/main.rs"
 
 [dependencies]
+axum = "0.8"
 rpassword = "7.5.4"
 rustls = { version = "0.23", features = ["aws_lc_rs"] }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = [
     "macros",
@@ -21,6 +23,10 @@ tokio = { workspace = true, features = [
     "time"
 ] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = { workspace = true }
+uuid = { workspace = true }
 vrcx-0-application-core = { path = "../application-core" }
+vrcx-0-contracts = { path = "../contracts" }
+vrcx-0-persistence = { path = "../persistence" }
 vrcx-0-platform = { path = "../platform" }
 vrcx-0-composition = { path = "../composition" }

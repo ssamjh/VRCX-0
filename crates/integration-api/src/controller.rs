@@ -481,10 +481,10 @@ impl IntegrationApiController {
         failure: IntegrationApiFailure,
     ) {
         let mut state = controller_state.lock().await;
-        if !state
+        if state
             .handle
             .as_ref()
-            .is_some_and(|handle| handle.id == listener_id)
+            .is_none_or(|handle| handle.id != listener_id)
         {
             return;
         }

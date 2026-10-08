@@ -1,0 +1,16 @@
+# Only the Rust workspace and localization inputs are needed by the collector.
+**
+!Cargo.toml
+!Cargo.lock
+!crates/
+!crates/**
+!src-tauri/
+!src-tauri/**
+!src/
+!src/localization/
+!src/localization/**
+!Dockerfile.headless
+!.dockerignore
+
+**/target
+**/*.log

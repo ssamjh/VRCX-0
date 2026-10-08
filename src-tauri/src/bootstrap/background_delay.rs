@@ -86,9 +86,9 @@ fn claim_background_delay_generation(
     let Ok(mut cancel_slot) = cancel_slot.lock() else {
         return false;
     };
-    if !cancel_slot
+    if cancel_slot
         .as_ref()
-        .is_some_and(|(current, _)| *current == generation)
+        .is_none_or(|(current, _)| *current != generation)
     {
         return false;
     }

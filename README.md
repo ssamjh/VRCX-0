@@ -57,7 +57,8 @@ VRCX-0 is a ground-up rewrite of VRCX by one of its former maintainers. Rebuilt 
 
 - **MCP server** — let external AI tools use your local social data directly
 - **Integration API** — real-time in-game data for third-party apps
-- **Headless mode** — run without a UI; see `crates/headless`
+- **Headless collector** — record on an always-on server and sync desktop history;
+  see [setup instructions](HEADLESS.md)
 
 ### Compared with VRCX
 

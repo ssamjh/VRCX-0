@@ -219,6 +219,9 @@ pub fn friend_log_replace_current(
                     .build(),
             )?;
         }
+        if written_history_count > 0 {
+            crate::history_sync::history_sync_reconcile_pending(tx, &user_prefix)?;
+        }
         Ok::<i64, crate::Error>(written_history_count)
     })?;
     Ok(FriendLogMutationResult {
@@ -274,6 +277,9 @@ pub fn friend_log_delete_current_array(
                     written_history_count += 1;
                 }
             }
+        }
+        if written_history_count > 0 {
+            crate::history_sync::history_sync_reconcile_pending(tx, &user_prefix)?;
         }
         Ok::<(i64, i64), crate::Error>((deleted_count, written_history_count))
     })?;
@@ -338,6 +344,9 @@ pub fn friend_log_upsert_current(
             add_friend_log_history_entry(tx, &user_prefix, &history_entry)?;
             history_count = 1;
         }
+        if history_count > 0 {
+            crate::history_sync::history_sync_reconcile_pending(tx, &user_prefix)?;
+        }
         Ok::<(bool, i64), crate::Error>((inserted, history_count))
     })?;
     Ok(FriendLogMutationResult {
@@ -376,6 +385,9 @@ pub fn friend_log_history_add(
                     .build(),
             )?;
             written_count += affected;
+        }
+        if written_count > 0 {
+            crate::history_sync::history_sync_reconcile_pending(tx, &user_prefix)?;
         }
         Ok::<i64, crate::Error>(written_count)
     })?;

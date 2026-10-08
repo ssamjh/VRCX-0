@@ -111,8 +111,8 @@ export function useFriendLogRows({
     useEffect(() => {
         if (seenRevisionRef.current === revision) return;
         seenRevisionRef.current = revision;
-        if (searchMode) return;
-        if (viewingLatestRef.current) setLiveRefreshToken((token) => token + 1);
+        if (searchMode || viewingLatestRef.current)
+            setLiveRefreshToken((token) => token + 1);
         else setHasUnloadedLatest(true);
     }, [revision, searchMode]);
 

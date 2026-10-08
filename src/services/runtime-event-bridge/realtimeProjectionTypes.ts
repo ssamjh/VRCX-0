@@ -16,10 +16,11 @@ import type { FeedLivePatch } from '@/state/feedLiveTypes';
 
 export type RealtimeFriendProjectionPayload = Omit<
     FriendProjection,
-    'patches' | 'removals'
+    'patches' | 'removals' | 'historyChanged'
 > & {
     patches: FriendProjectionPatch[];
     removals: string[];
+    historyChanged?: boolean;
 };
 
 export type RealtimeEntryCorrectionPayload = Omit<

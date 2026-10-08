@@ -26,6 +26,8 @@ use vrcx_0_platform::error_log::{
     append_headless_error_log, default_app_data_dir, ErrorLogWriter, HEADLESS_ERROR_LOG_FILE,
 };
 
+mod history_sync_api;
+
 fn main() -> ExitCode {
     build_adaptive_tokio_runtime().block_on(async_main())
 }
@@ -47,6 +49,7 @@ async fn async_main() -> ExitCode {
 
     let args: Vec<String> = std::env::args().collect();
     let force_login = args.iter().any(|arg| arg == "--login" || arg == "-l");
+    let reset_sync_source = args.iter().any(|arg| arg == "--reset-sync-source");
     let cli_login_prompt: Option<Arc<dyn CliLoginPrompt>> =
         force_login.then(|| Arc::new(StdinLoginPrompt) as Arc<dyn CliLoginPrompt>);
 
@@ -88,7 +91,8 @@ async fn async_main() -> ExitCode {
     };
 
     let (fatal_tx, mut fatal_rx) = mpsc::unbounded_channel();
-    let console_sink = ConsoleRuntimeEventSink::new(fatal_tx, app_data_dir.current_dir.clone());
+    let console_sink =
+        ConsoleRuntimeEventSink::new(fatal_tx.clone(), app_data_dir.current_dir.clone());
     state.set_event_sink(console_sink.clone());
 
     match state.start_headless_backend_runtime(cli_login_prompt).await {
@@ -102,20 +106,105 @@ async fn async_main() -> ExitCode {
             return ExitCode::from(1);
         }
     }
-    println!("headless runtime is running. Press Ctrl+C to stop.");
+    let mut collector_api_task = None;
+    match history_sync_api::configured_listener() {
+        Ok(Some((listener, bearer_token))) => {
+            let address = listener
+                .local_addr()
+                .map(|address| address.to_string())
+                .unwrap_or_else(|_| "configured address".into());
+            let Some(session) = state.authenticated_session_projection().session else {
+                report_headless_error(
+                    Some(&app_data_dir.current_dir),
+                    "headless:history-sync",
+                    "history sync API requires an authenticated account",
+                );
+                shutdown_runtime(&state, "collector-api-no-account");
+                return ExitCode::from(1);
+            };
+            let source_id = match history_sync_api::load_or_create_source_id(
+                state.database(),
+                reset_sync_source,
+            ) {
+                Ok(source_id) => source_id,
+                Err(error) => {
+                    report_headless_error(
+                        Some(&app_data_dir.current_dir),
+                        "headless:history-sync",
+                        &error,
+                    );
+                    shutdown_runtime(&state, "collector-api-source-id-error");
+                    return ExitCode::from(1);
+                }
+            };
+            if reset_sync_source {
+                println!("history sync source id was rotated as requested.");
+            }
+            let database = Arc::clone(state.database());
+            let user_id = session.user_id;
+            let initialize_database = Arc::clone(&database);
+            let initialize_user_id = user_id.clone();
+            let initialized = tokio::task::spawn_blocking(move || {
+                vrcx_0_persistence::history_sync::history_sync_prepare(
+                    &initialize_database,
+                    &initialize_user_id,
+                )
+            })
+            .await;
+            let initialization_error = match initialized {
+                Ok(Ok(_)) => None,
+                Ok(Err(error)) => Some(error.to_string()),
+                Err(error) => Some(error.to_string()),
+            };
+            if let Some(message) = initialization_error {
+                report_headless_error(
+                    Some(&app_data_dir.current_dir),
+                    "headless:history-sync",
+                    &message,
+                );
+                shutdown_runtime(&state, "collector-api-initialization-error");
+                return ExitCode::from(1);
+            }
+            let api_fatal_tx = fatal_tx.clone();
+            collector_api_task = Some(tokio::spawn(async move {
+                if let Err(error) =
+                    history_sync_api::serve(listener, database, bearer_token, source_id, user_id)
+                        .await
+                {
+                    let _ = api_fatal_tx.send(format!("history sync API stopped: {error}"));
+                }
+            }));
+            println!("history sync API is listening at {address}.");
+        }
+        Ok(None) => {
+            println!("history sync API is disabled; set VRCX_COLLECTOR_TOKEN to enable it.")
+        }
+        Err(error) => {
+            report_headless_error(
+                Some(&app_data_dir.current_dir),
+                "headless:history-sync",
+                &error,
+            );
+            shutdown_runtime(&state, "collector-api-bind-error");
+            return ExitCode::from(1);
+        }
+    }
+    println!("headless runtime is running. Press Ctrl+C or send SIGTERM to stop.");
     tokio::select! {
-        signal = tokio::signal::ctrl_c() => {
+        signal = shutdown_signal() => {
             if let Err(error) = signal {
                 report_headless_error(
                     Some(&app_data_dir.current_dir),
                     "headless:signal",
-                    format!("failed to wait for Ctrl+C: {error}"),
+                    format!("failed to wait for shutdown signal: {error}"),
                 );
                 console_sink.begin_shutdown();
+                if let Some(task) = collector_api_task.take() { task.abort(); }
                 shutdown_runtime(&state, "signal-error");
                 return ExitCode::from(1);
             }
             console_sink.begin_shutdown();
+            if let Some(task) = collector_api_task.take() { task.abort(); }
             shutdown_runtime(&state, "ctrl-c");
             ExitCode::SUCCESS
         }
@@ -127,9 +216,26 @@ async fn async_main() -> ExitCode {
                 format!("headless runtime fatal error: {reason}"),
             );
             console_sink.begin_shutdown();
+            if let Some(task) = collector_api_task.take() { task.abort(); }
             shutdown_runtime(&state, "fatal-error");
             ExitCode::from(1)
         }
+    }
+}
+
+async fn shutdown_signal() -> std::io::Result<()> {
+    #[cfg(unix)]
+    {
+        let mut terminate =
+            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+        tokio::select! {
+            result = tokio::signal::ctrl_c() => result,
+            _ = terminate.recv() => Ok(()),
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        tokio::signal::ctrl_c().await
     }
 }
 

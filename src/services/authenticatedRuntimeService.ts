@@ -11,6 +11,10 @@ import { useSessionStore } from '@/state/sessionStore';
 
 import { rosterSnapshotInput } from './friendBootstrapModel';
 import { signalFriendLogChanged } from './friendLogMutationService';
+import {
+    stopHistoryCollectorAutoSync,
+    syncCollectorHistoryForSession
+} from './historyCollectorSyncService';
 import { flushRealtimeRosterUpdates } from './realtimeRosterUpdateQueue';
 import { syncStartupServicesTask } from './startupServicesStatus';
 
@@ -318,12 +322,29 @@ export function applyAuthenticatedRuntimePhaseSnapshot(
         applyRealtimeStatus(pendingRealtimeStatus, snapshot);
     }
     if (snapshot.phase === 'ready') {
+        startHistoryCollectorSyncForCurrentSession();
         syncStartupServicesTask([
             snapshot.friends.detail,
             snapshot.favorites.detail,
             snapshot.realtime.detail
         ]);
     }
+}
+
+export function startHistoryCollectorSyncForCurrentSession(): void {
+    const snapshot = latestSnapshot;
+    if (
+        !snapshot ||
+        snapshot.phase !== 'ready' ||
+        !matchesCurrentSession(snapshot)
+    ) {
+        return;
+    }
+    void syncCollectorHistoryForSession(snapshot.userId, snapshot.runId).catch(
+        () => {
+            // Command failures are recorded by the Tauri command bridge.
+        }
+    );
 }
 
 export function handleAuthenticatedRuntimeRealtimeStatus(
@@ -346,6 +367,7 @@ export function currentRealtimeTransportGeneration(): number | null {
 }
 
 export function resetAuthenticatedRuntimeMirror(): void {
+    stopHistoryCollectorAutoSync();
     latestSnapshot = null;
     appliedFriendBaselineKey = '';
     appliedFavoritesRunId = 0;

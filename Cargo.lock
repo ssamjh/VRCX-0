@@ -6242,6 +6242,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tokio-rustls",
@@ -8947,6 +8948,7 @@ dependencies = [
  "image",
  "libloading 0.9.0",
  "percent-encoding",
+ "reqwest",
  "rustls",
  "semver",
  "serde",
@@ -9166,13 +9168,19 @@ dependencies = [
 name = "vrcx-0-headless"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "rpassword",
  "rustls",
+ "serde",
  "serde_json",
  "tokio",
+ "tracing",
  "tracing-subscriber",
+ "uuid",
  "vrcx-0-application-core",
  "vrcx-0-composition",
+ "vrcx-0-contracts",
+ "vrcx-0-persistence",
  "vrcx-0-platform",
 ]
 

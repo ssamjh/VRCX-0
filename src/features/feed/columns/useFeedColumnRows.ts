@@ -11,6 +11,7 @@ import {
 } from '@/services/feedLiveMergeService';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import { useFeedLiveStore } from '@/state/feedLiveStore';
+import { useFriendLogStore } from '@/state/friendLogStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { useSessionStore } from '@/state/sessionStore';
@@ -36,6 +37,7 @@ export function useFeedColumnRows(column: FeedColumnConfig) {
     const isFavoritesLoaded = useSessionStore(
         (state) => state.isFavoritesLoaded
     );
+    const friendLogRevision = useFriendLogStore((state) => state.revision);
     const remoteFavoritesById = useFavoriteStore(
         (state) => state.remoteFavoritesById
     );
@@ -230,6 +232,7 @@ export function useFeedColumnRows(column: FeedColumnConfig) {
         favoritesReady,
         feedHiddenUsers,
         feedPersistenceDisabled,
+        friendLogRevision,
         queryKey,
         scopeHasRows
     ]);

@@ -1179,6 +1179,17 @@ const generatedCommands = {
             entry
         });
     },
+    async appHistorySyncNow(
+        serverUrl: string,
+        token: string,
+        userId: string
+    ): Promise<HistorySyncStatus> {
+        return await TAURI_INVOKE('app__history_sync_now', {
+            serverUrl,
+            token,
+            userId
+        });
+    },
     async appNotificationListQuery(
         query: NotificationListQueryInput
     ): Promise<NotificationListItemOutput[]> {
@@ -4429,6 +4440,7 @@ export type FriendProjection = {
     removals?: string[];
     locationTimeSnapshot?: FriendLocationTime[] | null;
     friendLogChanged: boolean;
+    historyChanged?: boolean;
 };
 export type FriendProjectionPatch = {
     userId: string;
@@ -4981,6 +4993,12 @@ export type GroupSearchParams = {
     query?: string | null;
     offset?: number | null;
     n?: number | null;
+};
+export type HistorySyncStatus = {
+    imported: number;
+    skippedDuplicates: number;
+    pages: number;
+    sourceId: string;
 };
 export type HostArchitecture = 'x86_64' | 'aarch64' | 'unknown';
 export type HostCapabilities = {

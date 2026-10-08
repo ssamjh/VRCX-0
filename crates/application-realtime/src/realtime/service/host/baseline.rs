@@ -66,6 +66,7 @@ impl RealtimeHostRuntime {
             || !projection.removals.is_empty()
             || projection.location_time_snapshot.is_some()
             || projection.friend_log_changed
+            || projection.history_changed
             || !presence_feed_entries.is_empty()
             || !joining_feed_entries.is_empty()
         {

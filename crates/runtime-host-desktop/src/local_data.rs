@@ -36,6 +36,7 @@ pub use vrcx_0_application_activity::activity_page::{ActivityPageBuildInput, Act
 pub use vrcx_0_contracts::activity_page::{
     ActivityJourneyDayInput, ActivityJourneyDaysInput, ActivityJourneyVisit,
 };
+pub use vrcx_0_contracts::history_sync::{HistorySyncImportInput, HistorySyncImportOutput};
 pub use vrcx_0_core::OwnerId;
 pub use vrcx_0_persistence::activity::{
     ActivityOverlapViewBuildInput, ActivityOverlapViewOutput, ActivityViewBuildInput,
@@ -588,6 +589,18 @@ impl LocalDataRuntime {
 
     pub fn config_list_values(&self) -> Result<Vec<ConfigReadEntry>> {
         vrcx_0_application::profile::list_config_values(self.profile_config.as_ref())
+    }
+
+    pub fn history_sync_import(
+        &self,
+        user_id: &str,
+        input: &HistorySyncImportInput,
+    ) -> Result<HistorySyncImportOutput> {
+        Ok(
+            vrcx_0_persistence::history_sync::history_sync_import_reconciled(
+                &self.db, user_id, input,
+            )?,
+        )
     }
 
     pub fn config_remove_value(&self, key: String) -> Result<i64> {

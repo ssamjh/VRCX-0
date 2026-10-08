@@ -255,10 +255,10 @@ impl RealtimeCurrentUserRuntime {
         if state.generation != generation
             || state.current_user_id.is_empty()
             || game.is_game_running()
-            || !state
+            || state
                 .pending_offline
                 .as_ref()
-                .is_some_and(|pending| now.timestamp_ms >= pending.deadline_ms)
+                .is_none_or(|pending| now.timestamp_ms < pending.deadline_ms)
         {
             return None;
         }

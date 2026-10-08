@@ -94,6 +94,13 @@ pub fn write_realtime_batch(
         for observation in &batch.self_profile_observations {
             counts.add_realtime_rows(observe_self_profile_field(tx, &user_prefix, observation)?);
         }
+        if !batch.feed_entries.is_empty()
+            || !batch.friend_log_upserts.is_empty()
+            || !batch.friend_log_deletes.is_empty()
+        {
+            counts.history_reconciled_count =
+                crate::history_sync::history_sync_reconcile_pending(tx, &user_prefix)?;
+        }
         Ok(counts)
     })
 }

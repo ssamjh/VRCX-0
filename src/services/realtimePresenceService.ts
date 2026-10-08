@@ -16,6 +16,7 @@ import { useShellStore } from '@/state/shellStore';
 import { useVrcNotificationStore } from '@/state/vrcNotificationStore';
 
 import { recordCurrentUserSnapshot } from './domainIngestionService';
+import { signalFriendLogChanged } from './friendLogMutationService';
 import { handleQueuedInstancePatch } from './realtimeInstanceQueueService';
 import {
     flushRealtimeRosterUpdates,
@@ -171,6 +172,9 @@ async function shouldNotifyInstanceClosed(): Promise<boolean> {
 function handleRealtimeFriendProjection(
     payload: RealtimeFriendProjectionPayload
 ) {
+    if (payload.historyChanged && !payload.friendLogChanged) {
+        signalFriendLogChanged({ notify: false });
+    }
     const removalIds = payload.removals
         .map((userId) => normalizeUserId(userId))
         .filter(Boolean);

@@ -102,6 +102,7 @@ impl RealtimePersistenceBatch {
 pub struct RealtimeWriteCounts {
     pub affected_count: u64,
     pub game_log_affected_count: u64,
+    pub history_reconciled_count: u64,
 }
 
 impl RealtimeWriteCounts {
